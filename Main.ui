@@ -229,7 +229,7 @@
       <x>583</x>
       <y>20</y>
       <width>51</width>
-      <height>201</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="orientation">
@@ -314,6 +314,19 @@
      <string>Paytm</string>
     </property>
    </widget>
+   <widget class="Line" name="line_3">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>190</y>
+      <width>118</width>
+      <height>3</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -334,7 +347,17 @@
     <addaction name="actionLog_Out"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuItems">
+    <property name="title">
+     <string>Items</string>
+    </property>
+    <addaction name="actionAdd_Item"/>
+    <addaction name="actionRemove_Item"/>
+    <addaction name="actionView_Items"/>
+    <addaction name="separator"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuItems"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew_Bill">
@@ -360,6 +383,21 @@
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionAdd_Item">
+   <property name="text">
+    <string>Add Item</string>
+   </property>
+  </action>
+  <action name="actionRemove_Item">
+   <property name="text">
+    <string>Remove Item</string>
+   </property>
+  </action>
+  <action name="actionView_Items">
+   <property name="text">
+    <string>View Items</string>
    </property>
   </action>
  </widget>

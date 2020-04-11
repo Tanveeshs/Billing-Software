@@ -1,27 +1,55 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file '/tmp/MainqwhAtE.ui'
-#
-# Created by: PyQt5 UI code generator 5.12.3
-#
-# WARNING! All changes made in this file will be lost!
-
+import sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QStringListModel
+from PyQt5.QtWidgets import QCompleter
+import pymongo
+from PyQt5.QtCore import Qt
+
+#ADD ITEM BUTTON CONFIGURED
+#AUTO TYPE CONFIGURED
+#TABLE VIEW MEIN REMOVE COLUMN AND INDEX
+
+myClient = pymongo.MongoClient('mongodb://localhost:27017')
+mydb = myClient['Billing']
+mycol = mydb['Items']
+
+
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+        return len(self._data)
+
+    def columnCount(self, index):
+        return len(self._data[0])
 
 
 class Ui_MainWindow(object):
+    billed = [['Item Name', 'Quantity', 'Price', 'Total']]
+    items = []
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 592)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(120, 410, 261, 25))
         self.lineEdit.setObjectName("lineEdit")
+        self.completer = QCompleter()
+        self.model = QStringListModel()
+
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(20, 410, 101, 17))
         self.label.setObjectName("label")
+
         self.spinBox = QtWidgets.QSpinBox(self.centralwidget)
         self.spinBox.setGeometry(QtCore.QRect(120, 460, 91, 26))
         self.spinBox.setObjectName("spinBox")
@@ -41,6 +69,8 @@ class Ui_MainWindow(object):
         self.tableView = QtWidgets.QTableView(self.scrollAreaWidgetContents)
         self.tableView.setGeometry(QtCore.QRect(0, 0, 381, 591))
         self.tableView.setObjectName("tableView")
+        self.model2 = TableModel(self.billed)
+        self.tableView.setModel(self.model2)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(460, 40, 121, 41))
@@ -72,7 +102,7 @@ class Ui_MainWindow(object):
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line.setObjectName("line")
         self.line_2 = QtWidgets.QFrame(self.centralwidget)
-        self.line_2.setGeometry(QtCore.QRect(583, 20, 51, 201))
+        self.line_2.setGeometry(QtCore.QRect(583, 20, 51, 231))
         self.line_2.setFrameShape(QtWidgets.QFrame.VLine)
         self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_2.setObjectName("line_2")
@@ -94,12 +124,19 @@ class Ui_MainWindow(object):
         self.pushButton_5 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_5.setGeometry(QtCore.QRect(640, 380, 101, 81))
         self.pushButton_5.setObjectName("pushButton_5")
+        self.line_3 = QtWidgets.QFrame(self.centralwidget)
+        self.line_3.setGeometry(QtCore.QRect(457, 190, 271, 20))
+        self.line_3.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_3.setObjectName("line_3")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuItems = QtWidgets.QMenu(self.menubar)
+        self.menuItems.setObjectName("menuItems")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -114,12 +151,23 @@ class Ui_MainWindow(object):
         self.actionTotal_Sale.setObjectName("actionTotal_Sale")
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.setObjectName("actionExit")
+        self.actionAdd_Item = QtWidgets.QAction(MainWindow)
+        self.actionAdd_Item.setObjectName("actionAdd_Item")
+        self.actionRemove_Item = QtWidgets.QAction(MainWindow)
+        self.actionRemove_Item.setObjectName("actionRemove_Item")
+        self.actionView_Items = QtWidgets.QAction(MainWindow)
+        self.actionView_Items.setObjectName("actionView_Items")
         self.menuFile.addAction(self.actionNew_Bill)
         self.menuFile.addAction(self.actionView_Bills)
         self.menuFile.addAction(self.actionTotal_Sale)
         self.menuFile.addAction(self.actionLog_Out)
         self.menuFile.addAction(self.actionExit)
+        self.menuItems.addAction(self.actionAdd_Item)
+        self.menuItems.addAction(self.actionRemove_Item)
+        self.menuItems.addAction(self.actionView_Items)
+        self.menuItems.addSeparator()
         self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuItems.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -127,9 +175,17 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+
+        self.lineEdit.setCompleter(self.completer)
+        self.completer.setModel(self.model)
+        self.get_items(self.model)
+
         self.label.setText(_translate("MainWindow", "Item Name"))
         self.label_2.setText(_translate("MainWindow", "Quantity"))
+
         self.pushButton.setText(_translate("MainWindow", "Add Item"))
+        self.pushButton.clicked.connect(self.onAddItemClick)
+
         self.label_3.setText(_translate("MainWindow", "Total Amount"))
         self.label_4.setText(_translate("MainWindow", "TextLabel"))
         self.label_5.setText(_translate("MainWindow", "Discount"))
@@ -145,19 +201,72 @@ class Ui_MainWindow(object):
         self.label_12.setText(_translate("MainWindow", "TextLabel"))
         self.pushButton_5.setText(_translate("MainWindow", "Paytm"))
         self.menuFile.setTitle(_translate("MainWindow", "Options"))
+        self.menuItems.setTitle(_translate("MainWindow", "Items"))
         self.actionNew_Bill.setText(_translate("MainWindow", "New Bill"))
         self.actionView_Bills.setText(_translate("MainWindow", "View Bills"))
         self.actionLog_Out.setText(_translate("MainWindow", "Log Out"))
         self.actionTotal_Sale.setText(_translate("MainWindow", "Total Sale"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
+        self.actionAdd_Item.setText(_translate("MainWindow", "Add Item"))
+        self.actionRemove_Item.setText(_translate("MainWindow", "Remove Item"))
+        self.actionView_Items.setText(_translate("MainWindow", "View Items"))
+
+    def get_items(self, model):
+        items = []
+        mydoc = mycol.find()
+        for i in mydoc:
+            items.append(i['name'])
+        model.setStringList(items)
+        self.items = items
+
+
+    def onAddItemClick(self):
+        itemName = self.lineEdit.text()
+        mydoc = mycol.find({'name': itemName})
+        quantity = self.spinBox.text()
+        row = []
+        # if itemName not in self.items:
+            # ADD DIALOG BOX
+        if int(quantity) == 0:
+            self.lineEdit.setText('')
+            self.spinBox.setValue('')
+
+        else:
+            a = 0
+            for i in self.billed:
+                if i[0] == itemName:
+                    ogQuantity = i[1]
+                    self.billed.remove(i)
+                    row.append(mydoc[0]['name'])
+                    row.append(int(ogQuantity)+int(quantity))
+                    row.append(str(mydoc[0]['price']))
+                    row.append((int(ogQuantity)+int(quantity)) * int(mydoc[0]['price']))
+                    self.billed.append(row)
+                    self.lineEdit.setText('')
+                    self.spinBox.setValue(0)
+                    self.model2 = TableModel(self.billed)
+                    self.tableView.setModel(self.model2)
+                    a = 2
+
+            if (a != 2):
+                row.append(mydoc[0]['name'])
+                row.append(quantity)
+                row.append(str(mydoc[0]['price']))
+                row.append(int(quantity) * int(mydoc[0]['price']))
+                print(row)
+                self.billed.append(row)
+                print(self.billed)
+                self.lineEdit.setText('')
+                self.spinBox.setValue(0)
+
+                self.model2 = TableModel(self.billed)
+                self.tableView.setModel(self.model2)
 
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
