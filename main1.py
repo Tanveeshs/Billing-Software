@@ -1,14 +1,18 @@
 import sys
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import QStringListModel
-from PyQt5.QtWidgets import QCompleter
+from DiscountDialog import Ui_Dialog as Form
+from PyQt5 import QtCore, QtGui,QtWidgets
+from PyQt5.QtCore import QStringListModel, QObject
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QCompleter, QTableView
 import pymongo
 from PyQt5.QtCore import Qt
 
-#ADD ITEM BUTTON CONFIGURED
-#AUTO TYPE CONFIGURED
-#TABLE VIEW MEIN REMOVE COLUMN AND INDEX
+# LABEL_10 total items
+# LABEL 4 total amount
+
+# ADD ITEM BUTTON CONFIGURED
+# AUTO TYPE CONFIGURED
+import DiscountDialog
 
 myClient = pymongo.MongoClient('mongodb://localhost:27017')
 mydb = myClient['Billing']
@@ -34,7 +38,9 @@ class TableModel(QtCore.QAbstractTableModel):
 class Ui_MainWindow(object):
     billed = [['Item Name', 'Quantity', 'Price', 'Total']]
     items = []
+    discount = 0
     def setupUi(self, MainWindow):
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 592)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -56,6 +62,12 @@ class Ui_MainWindow(object):
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(20, 470, 67, 17))
         self.label_2.setObjectName("label_2")
+
+
+        self.pushButton_6 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_6.setGeometry(QtCore.QRect(300, 510, 89, 25))
+        self.pushButton_6.setObjectName("pushButton_6")
+
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(120, 510, 89, 25))
         self.pushButton.setObjectName("pushButton")
@@ -70,7 +82,10 @@ class Ui_MainWindow(object):
         self.tableView.setGeometry(QtCore.QRect(0, 0, 381, 591))
         self.tableView.setObjectName("tableView")
         self.model2 = TableModel(self.billed)
+        self.model2.setHeaderData(0, Qt.Horizontal, 'NAME', 0)
         self.tableView.setModel(self.model2)
+        self.header = self.tableView.horizontalHeader()
+        self.header.setDefaultAlignment(Qt.AlignHCenter)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(460, 40, 121, 41))
@@ -186,14 +201,17 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Add Item"))
         self.pushButton.clicked.connect(self.onAddItemClick)
 
+        self.pushButton_6.setText(_translate("MainWindow", "Discount"))
+        self.pushButton_6.clicked.connect(self.onDiscountClick)
+
         self.label_3.setText(_translate("MainWindow", "Total Amount"))
-        self.label_4.setText(_translate("MainWindow", "TextLabel"))
+        self.label_4.setText(_translate("MainWindow", "0"))
         self.label_5.setText(_translate("MainWindow", "Discount"))
-        self.label_6.setText(_translate("MainWindow", "TextLabel"))
+        self.label_6.setText(_translate("MainWindow", ""))
         self.label_7.setText(_translate("MainWindow", "Net Amount"))
         self.label_8.setText(_translate("MainWindow", "TextLabel"))
         self.label_9.setText(_translate("MainWindow", "Total Items"))
-        self.label_10.setText(_translate("MainWindow", "TextLabel"))
+        self.label_10.setText(_translate("MainWindow", ""))
         self.pushButton_2.setText(_translate("MainWindow", "Cash"))
         self.pushButton_3.setText(_translate("MainWindow", "Credit/Debit"))
         self.pushButton_4.setText(_translate("MainWindow", "Gift Voucher"))
@@ -219,14 +237,13 @@ class Ui_MainWindow(object):
         model.setStringList(items)
         self.items = items
 
-
     def onAddItemClick(self):
         itemName = self.lineEdit.text()
         mydoc = mycol.find({'name': itemName})
         quantity = self.spinBox.text()
         row = []
         # if itemName not in self.items:
-            # ADD DIALOG BOX
+        # ADD DIALOG BOX
         if int(quantity) == 0:
             self.lineEdit.setText('')
             self.spinBox.setValue('')
@@ -238,9 +255,9 @@ class Ui_MainWindow(object):
                     ogQuantity = i[1]
                     self.billed.remove(i)
                     row.append(mydoc[0]['name'])
-                    row.append(int(ogQuantity)+int(quantity))
+                    row.append(int(ogQuantity) + int(quantity))
                     row.append(str(mydoc[0]['price']))
-                    row.append((int(ogQuantity)+int(quantity)) * int(mydoc[0]['price']))
+                    row.append((int(ogQuantity) + int(quantity)) * int(mydoc[0]['price']))
                     self.billed.append(row)
                     self.lineEdit.setText('')
                     self.spinBox.setValue(0)
@@ -261,6 +278,45 @@ class Ui_MainWindow(object):
 
                 self.model2 = TableModel(self.billed)
                 self.tableView.setModel(self.model2)
+        self.setTotalItems()
+        self.setTotalAmount()
+        self.setDiscountAmount()
+
+    def setTotalItems(self):
+        totalItems = 0
+        if len(self.billed) == 1:
+            self.label_10.setText(str(0))
+        else:
+            for i in self.billed[1:]:
+                totalItems += int(i[1])
+            self.label_10.setText(str(totalItems))
+
+    def setTotalAmount(self):
+        totalAmount = 0
+        if len(self.billed) == 1:
+            self.label_10.setText(str(0))
+        else:
+            for i in self.billed[1:]:
+                totalAmount += int(i[3])
+            self.label_4.setText(str(totalAmount))
+
+    def onDiscountClick(self):
+        dialog = QtWidgets.QDialog()
+        dialog.ui = Form()
+        dialog.ui.setupUi(dialog)
+        dialog.exec_()
+        # dialog.show()
+        self.discount = dialog.ui.getPercent()
+        print(self.discount)
+        self.setDiscountAmount()
+
+    def setDiscountAmount(self):
+        total_amt = int(self.label_4.text())
+        print(total_amt)
+        print(self.discount)
+        disc = int(total_amt*int(self.discount)/100)
+        print(disc)
+        self.label_6.setText(str(disc))
 
 
 if __name__ == "__main__":
