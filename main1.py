@@ -1,22 +1,28 @@
 import sys
-from DiscountDialog import Ui_Dialog as Form
-from PyQt5 import QtCore, QtGui,QtWidgets
-from PyQt5.QtCore import QStringListModel, QObject
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QCompleter, QTableView
+
 import pymongo
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QStringListModel
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QCompleter
+
+from DiscountDialog import Ui_Dialog as Form
+from CashDialog import Ui_Dialog as Form1
+from CardPayment import Ui_Dialog as Form2
+from PaytmDialog import Ui_Dialog as Form3
+from AddItem import Ui_Dialog as Form4
+from ViewBill import Ui_Dialog as Form5
+from TotalSale import Ui_Dialog as Form6
+from Items import Ui_Dialog as Form7
 
 # LABEL_10 total items
 # LABEL 4 total amount
 
-# ADD ITEM BUTTON CONFIGURED
-# AUTO TYPE CONFIGURED
-import DiscountDialog
 
 myClient = pymongo.MongoClient('mongodb://localhost:27017')
 mydb = myClient['Billing']
 mycol = mydb['Items']
+mycol1 = mydb['Bills']
 
 
 class TableModel(QtCore.QAbstractTableModel):
@@ -39,9 +45,11 @@ class Ui_MainWindow(object):
     billed = [['Item Name', 'Quantity', 'Price', 'Total']]
     items = []
     discount = 0
-    def setupUi(self, MainWindow):
 
-        MainWindow.setObjectName("MainWindow")
+    def setupUi(self, MainWindow):
+        self.MainWindow = MainWindow
+        MainWindow.setObjectName("Billing Zone")
+        self.MainWindow.setWindowTitle('HEY')
         MainWindow.resize(800, 592)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -62,11 +70,6 @@ class Ui_MainWindow(object):
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(20, 470, 67, 17))
         self.label_2.setObjectName("label_2")
-
-
-        self.pushButton_6 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_6.setGeometry(QtCore.QRect(300, 510, 89, 25))
-        self.pushButton_6.setObjectName("pushButton_6")
 
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(120, 510, 89, 25))
@@ -160,26 +163,21 @@ class Ui_MainWindow(object):
         self.actionNew_Bill.setObjectName("actionNew_Bill")
         self.actionView_Bills = QtWidgets.QAction(MainWindow)
         self.actionView_Bills.setObjectName("actionView_Bills")
-        self.actionLog_Out = QtWidgets.QAction(MainWindow)
-        self.actionLog_Out.setObjectName("actionLog_Out")
         self.actionTotal_Sale = QtWidgets.QAction(MainWindow)
         self.actionTotal_Sale.setObjectName("actionTotal_Sale")
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.setObjectName("actionExit")
         self.actionAdd_Item = QtWidgets.QAction(MainWindow)
         self.actionAdd_Item.setObjectName("actionAdd_Item")
+        self.actionAdd_Item.triggered.connect(self.onAddItemClick1)
         self.actionRemove_Item = QtWidgets.QAction(MainWindow)
         self.actionRemove_Item.setObjectName("actionRemove_Item")
-        self.actionView_Items = QtWidgets.QAction(MainWindow)
-        self.actionView_Items.setObjectName("actionView_Items")
         self.menuFile.addAction(self.actionNew_Bill)
         self.menuFile.addAction(self.actionView_Bills)
         self.menuFile.addAction(self.actionTotal_Sale)
-        self.menuFile.addAction(self.actionLog_Out)
         self.menuFile.addAction(self.actionExit)
         self.menuItems.addAction(self.actionAdd_Item)
         self.menuItems.addAction(self.actionRemove_Item)
-        self.menuItems.addAction(self.actionView_Items)
         self.menuItems.addSeparator()
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuItems.menuAction())
@@ -200,42 +198,64 @@ class Ui_MainWindow(object):
 
         self.pushButton.setText(_translate("MainWindow", "Add Item"))
         self.pushButton.clicked.connect(self.onAddItemClick)
-
-        self.pushButton_6.setText(_translate("MainWindow", "Discount"))
-        self.pushButton_6.clicked.connect(self.onDiscountClick)
-
+        self.actionTotal_Sale.triggered.connect(self.onTotalSaleClick)
         self.label_3.setText(_translate("MainWindow", "Total Amount"))
         self.label_4.setText(_translate("MainWindow", "0"))
         self.label_5.setText(_translate("MainWindow", "Discount"))
         self.label_6.setText(_translate("MainWindow", ""))
         self.label_7.setText(_translate("MainWindow", "Net Amount"))
-        self.label_8.setText(_translate("MainWindow", "TextLabel"))
+        self.label_8.setText(_translate("MainWindow", ""))
         self.label_9.setText(_translate("MainWindow", "Total Items"))
         self.label_10.setText(_translate("MainWindow", ""))
         self.pushButton_2.setText(_translate("MainWindow", "Cash"))
         self.pushButton_3.setText(_translate("MainWindow", "Credit/Debit"))
-        self.pushButton_4.setText(_translate("MainWindow", "Gift Voucher"))
+        self.pushButton_3.clicked.connect(self.onCreditClick)
+        self.pushButton_4.setText(_translate("MainWindow", "Discount"))
+        self.pushButton_4.clicked.connect(self.onDiscountClick)
         self.label_11.setText(_translate("MainWindow", "Bill Number"))
-        self.label_12.setText(_translate("MainWindow", "TextLabel"))
+        self.label_12.setText(_translate("MainWindow", ""))
         self.pushButton_5.setText(_translate("MainWindow", "Paytm"))
+        self.pushButton_5.clicked.connect(self.onPaytmClick)
         self.menuFile.setTitle(_translate("MainWindow", "Options"))
         self.menuItems.setTitle(_translate("MainWindow", "Items"))
         self.actionNew_Bill.setText(_translate("MainWindow", "New Bill"))
-        self.actionView_Bills.setText(_translate("MainWindow", "View Bills"))
-        self.actionLog_Out.setText(_translate("MainWindow", "Log Out"))
+        self.actionNew_Bill.triggered.connect(self.onNewBill)
+        self.actionView_Bills.setText(_translate("MainWindow", "View Bill"))
+        self.actionView_Bills.triggered.connect(self.onViewBills)
         self.actionTotal_Sale.setText(_translate("MainWindow", "Total Sale"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
+        self.actionExit.triggered.connect(self.onExitClick)
         self.actionAdd_Item.setText(_translate("MainWindow", "Add Item"))
         self.actionRemove_Item.setText(_translate("MainWindow", "Remove Item"))
-        self.actionView_Items.setText(_translate("MainWindow", "View Items"))
+        self.actionRemove_Item.triggered.connect(self.onRemoveItem)
+        self.pushButton_2.clicked.connect(self.onCashClick)
+        self.setBillNumber()
+
+    def setBillNumber(self):
+        mydoc = mycol1.find()
+        self.label_12.setText(mydoc[0]['BillNumber'])
+        mycol1.update({'BillNumber': mydoc[0]['BillNumber']}, {'BillNumber': str(1 + int(mydoc[0]['BillNumber']))})
+
+    def onRemoveItem(self):
+        dialog7 = QtWidgets.QDialog()
+        dialog7.ui = Form7()
+        dialog7.ui.setupUi(dialog7)
+        dialog7.exec_()
+        self.onNewBill()
 
     def get_items(self, model):
         items = []
-        mydoc = mycol.find()
+        mydoc = mycol.find({'stock': 'y'})
         for i in mydoc:
             items.append(i['name'])
         model.setStringList(items)
         self.items = items
+
+    def onViewBills(self):
+        dialog = QtWidgets.QDialog()
+        dialog.ui = Form5()
+        dialog.ui.setupUi(dialog)
+        dialog.exec_()
 
     def onAddItemClick(self):
         itemName = self.lineEdit.text()
@@ -281,6 +301,7 @@ class Ui_MainWindow(object):
         self.setTotalItems()
         self.setTotalAmount()
         self.setDiscountAmount()
+        self.setNetAmount()
 
     def setTotalItems(self):
         totalItems = 0
@@ -314,9 +335,52 @@ class Ui_MainWindow(object):
         total_amt = int(self.label_4.text())
         print(total_amt)
         print(self.discount)
-        disc = int(total_amt*int(self.discount)/100)
+        disc = int(total_amt * int(self.discount) / 100)
         print(disc)
         self.label_6.setText(str(disc))
+
+    def setNetAmount(self):
+        self.label_8.setText(str(int(self.label_4.text()) - int(self.label_6.text())))
+
+    def onCashClick(self):
+        dialog1 = QtWidgets.QDialog()
+        dialog1.ui = Form1()
+        dialog1.ui.setupUi(dialog1, self.label_8.text(), self.billed, self.label_12.text())
+        dialog1.exec_()
+        self.onNewBill()
+
+    def onNewBill(self):
+        self.billed = [['Item Name', 'Quantity', 'Price', 'Total']]
+        self.setupUi(self.MainWindow)
+
+    def onCreditClick(self):
+        dialog2 = QtWidgets.QDialog()
+        dialog2.ui = Form2()
+        dialog2.ui.setupUi(dialog2, self.label_8.text(), self.billed, self.label_12.text())
+        dialog2.exec_()
+        self.onNewBill()
+
+    def onPaytmClick(self):
+        dialog3 = QtWidgets.QDialog()
+        dialog3.ui = Form3()
+        dialog3.ui.setupUi(dialog3, self.billed, self.label_12.text(), self.label_8.text())
+        dialog3.exec_()
+        self.onNewBill()
+
+    def onExitClick(self):
+        sys.exit(app.exec_())
+
+    def onAddItemClick1(self):
+        dialog4 = QtWidgets.QDialog()
+        dialog4.ui = Form4()
+        dialog4.ui.setupUi(dialog4)
+        dialog4.exec_()
+
+    def onTotalSaleClick(self):
+        dialog6 = QtWidgets.QDialog()
+        dialog6.ui = Form6()
+        dialog6.ui.setupUi(dialog6)
+        dialog6.exec_()
 
 
 if __name__ == "__main__":

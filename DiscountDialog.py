@@ -64,5 +64,8 @@ class Ui_Dialog(object):
 
             self.label_2.setText("Code not found")
 
+
+
+
     def getPercent(self):
         return self.percent
